@@ -61,6 +61,13 @@ export function sendPayment(goalId, paymentRequest, inviteCode) {
   });
 }
 
+export function deleteGoal(goalId, creatorName, inviteCode) {
+  return request(`/api/goals/${goalId}`, {
+    method: "DELETE",
+    body: JSON.stringify({ creator_name: creatorName, invite_code: inviteCode }),
+  });
+}
+
 export function fetchContributors(goalId) {
   return request(`/api/goals/${goalId}/contributors`);
 }
