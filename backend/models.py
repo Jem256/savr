@@ -171,6 +171,14 @@ def settle_contribution(r_hash):
     return updated
 
 
+def delete_goal(goal_id):
+    """Soft-delete a goal by setting is_active = 0."""
+    conn = get_db()
+    conn.execute("UPDATE goals SET is_active = 0 WHERE id = ?", (goal_id,))
+    conn.commit()
+    conn.close()
+
+
 def mark_goal_complete_if_reached(goal_id):
     """Set is_active = 2 (complete) when current_amount >= target_amount."""
     conn = get_db()

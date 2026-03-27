@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { fetchGoal, contribute, verifyCode } from "../api";
 import PaymentModal from "../components/PaymentModal";
 import ContributorList from "../components/ContributorList";
 import ActivityFeed from "../components/ActivityFeed";
 import CelebrationCard from "../components/CelebrationCard";
 import SendModal from "../components/SendModal";
+import DeleteGoalModal from "../components/DeleteGoalModal";
 
 // ── Invite code gate ─────────────────────────────────────────────────────────
 function InviteGate({ goalId, onUnlocked }) {
@@ -57,6 +58,7 @@ function InviteGate({ goalId, onUnlocked }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function GoalDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [goal, setGoal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,6 +77,7 @@ export default function GoalDetail() {
   // Modals
   const [paymentData, setPaymentData] = useState(null);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const loadGoal = useCallback(() => {
     fetchGoal(id)
@@ -131,7 +134,7 @@ export default function GoalDetail() {
       {/* ── Header ── */}
       <div className="goal-header">
         <div className="goal-header-left">
-          <div className="goal-badges">
+          <div className="goal-badges goal-badges-row">
             <span className={`goal-badge ${goal.goal_type}`}>
               {goal.goal_type === "collaborative" ? "Collaborative" : "Personal"}
             </span>
@@ -150,6 +153,13 @@ export default function GoalDetail() {
             )}
           </p>
         </div>
+        <button
+          className="btn-delete-goal"
+          onClick={() => setShowDeleteModal(true)}
+          title="Delete this goal"
+        >
+          &#128465; Delete
+        </button>
       </div>
 
       {/* ── Progress ── */}
@@ -241,6 +251,19 @@ export default function GoalDetail() {
           inviteCode={unlockedCode}
           goalType={goal.goal_type}
           onClose={() => setShowSendModal(false)}
+        />
+      )}
+
+      {/* ── Delete goal modal ── */}
+      {showDeleteModal && (
+        <DeleteGoalModal
+          goal={goal}
+          inviteCode={unlockedCode}
+          onDeleted={() => {
+            localStorage.removeItem(`savr_code_${id}`);
+            navigate("/");
+          }}
+          onClose={() => setShowDeleteModal(false)}
         />
       )}
     </div>

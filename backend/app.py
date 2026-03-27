@@ -23,6 +23,7 @@ from models import (
     get_goal_contributors,
     verify_invite_code,
     mark_goal_complete_if_reached,
+    delete_goal,
 )
 
 app = Flask(__name__, static_folder="../frontend/dist", static_url_path="")
@@ -121,6 +122,29 @@ def api_get_goal(goal_id):
     if not goal:
         return jsonify({"error": "Goal not found"}), 404
     return jsonify(_strip_invite_code(goal))
+
+
+@app.route("/api/goals/<goal_id>", methods=["DELETE"])
+def api_delete_goal(goal_id):
+    goal = get_goal(goal_id)
+    if not goal:
+        return jsonify({"error": "Goal not found"}), 404
+
+    data = request.json or {}
+
+    # Confirm creator name matches (case-insensitive)
+    provided_name = data.get("creator_name", "").strip().lower()
+    if not provided_name or provided_name != goal["creator_name"].strip().lower():
+        return jsonify({"error": "Creator name does not match"}), 403
+
+    # Collaborative goals also require the invite code
+    if goal["goal_type"] == "collaborative":
+        code = data.get("invite_code", "")
+        if not verify_invite_code(goal_id, code):
+            return jsonify({"error": "Invalid invite code"}), 403
+
+    delete_goal(goal_id)
+    return jsonify({"success": True})
 
 
 @app.route("/api/goals/<goal_id>/verify_code", methods=["POST"])
